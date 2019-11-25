@@ -1,0 +1,1 @@
+This repository keeps track of past projects, or little code snippets I have made and may find useful in the future. People are more than welcome to reference it, but be warned that most of it will not work out of the box in your environment.
