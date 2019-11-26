@@ -7,8 +7,8 @@ import ast
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 try:
-	with open('C:\Riot Games\League of Legends\lockfile','r') as f:
-		client_string = f.read()
+	with open('C:\Riot Games\League of Legends\lockfile','r') as file:
+		client_string = file.read()
 		client_details = client_string.split(":")
 except:
 	print("game not launched")
@@ -36,8 +36,12 @@ try:
 	champSelectInfo = json.loads(lolRequest("GET","/lol-champ-select/v1/session").text)
 	for player in champSelectInfo["myTeam"]:
 		if player["summonerId"] == summonerID:
-			championID = player["championId"]
+			position = player["cellId"]
 			break
+	for cell in champSelectInfo["actions"]:
+		for action in cell:
+			if action['actorCellId'] == position and action['type'] == "pick":
+				championID = action['championId']
 except:
 	input("Not in a valid champion select")
 	exit(1)
