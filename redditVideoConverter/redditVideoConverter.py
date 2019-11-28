@@ -6,8 +6,6 @@ import uuid
 import shutil
 import ast
 
-input(os.path.exists("audio.mp4"))
-
 #This assumes that you have ffmpeg installed
 #sudo apt-get install ffmpeg for me
 #you will also need your own username and password
