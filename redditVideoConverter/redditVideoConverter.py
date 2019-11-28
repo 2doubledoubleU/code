@@ -4,14 +4,17 @@ import json
 import requests
 import uuid
 import shutil
+import ast
+
+input(os.path.exists("audio.mp4"))
 
 #This assumes that you have ffmpeg installed
 #sudo apt-get install ffmpeg for me
 #you will also need your own username and password
-with open('secrets.txt', 'r') as secretFile:
-	secrets = ast.literal_eval(secretFile.read())
-	userName = secrets['userName']
-	passWord = secrets['passWord']
+with open('redditVideoConverter.secret', 'r') as secretFile:
+		secrets = ast.literal_eval(secretFile.read())
+		userName = secrets['userName']
+		passWord = secrets['passWord']
 
 if os.path.exists("audio.mp4"):
 	os.remove("audio.mp4")
@@ -27,7 +30,7 @@ redditFeed = input("Reddit feed with the video you want: ")
 redditJson = redditFeed + ".json"
 
 session = requests.Session()
-customHeaders = {"User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"}
+customHeaders = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:70.0) Gecko/20100101 Firefox/70.0"}
 response = session.get(redditJson,headers=customHeaders)
 if response.status_code == 200:
 	try: 
@@ -72,11 +75,15 @@ if response.status_code == 200:
 	else:
 		shutil.copy("video.mp4",outputFile)
 
-	with open(outputFile, 'rb') as file:
-		print("Uploading...")
-		r = session.post("https://api.streamable.com/upload", auth=(userName,passWord), files={videoTitle:file})
-		print("Uploaded:")
-		print("https://streamable.com/"+ r.json()['shortcode'])
+	try:
+		with open(outputFile, 'rb') as file:
+			print("Uploading...")
+			r = session.post("https://api.streamable.com/upload", auth=(userName,passWord), files={videoTitle:file})
+			print("Uploaded:")
+			print("https://streamable.com/"+ r.json()['shortcode'])
+	except Exception as e:
+			print("uhoh there seems to be an issue with streamable: " + str(e))
+			exit(1)
 	
 	try:
 		os.remove("video.mp4")
