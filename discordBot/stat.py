@@ -6,7 +6,7 @@ import operator
 from datetime import datetime
 import ast
 
-with open('secrets.txt', 'r') as secretFile:
+with open('discordBot.secret', 'r') as secretFile:
 	secrets = ast.literal_eval(secretFile.read())
 	botAuthToken = secrets['botAuthToken']
 	guildId = secrets['guildId']
