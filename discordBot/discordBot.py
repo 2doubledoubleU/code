@@ -3,10 +3,26 @@ from discord.ext import commands
 import ast
 import random
 import redditVideoConverter
+import asyncio
+import re
+from datetime import datetime, date
+import time
+from pytz import utc
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+import sqlite3
 
 with open('discordBot.secret', 'r') as secretFile:
 	secrets = ast.literal_eval(secretFile.read())
 	botAuthToken = secrets['botAuthToken']
+
+scheduler = AsyncIOScheduler(jobstores={'default': SQLAlchemyJobStore(url='sqlite:///jobs.sqlite')})
+scheduler.start()
+
+async def sendMessage(guildId,channelId,message):
+    guild = bot.get_guild(guildId)
+    channel = guild.get_channel(channelId)
+    await channel.send(message)
 
 bot = commands.Bot(command_prefix='$')
 
@@ -26,10 +42,37 @@ async def info(ctx):
 
 @bot.command()
 async def birthday(ctx, user: str):
+
     await ctx.send('```Happy Birthday to you\n' \
         'Happy Birthday to you\n' \
         'Happy Birthday dear ' + user + '\n' \
         'Happy Birthday to you```')
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def delayedEcho(ctx, delay: str, channel: discord.TextChannel):
+    isoIsh = re.search('^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$',delay)
+    if isoIsh:
+        a = datetime.strptime(isoIsh.group(0), "%Y-%m-%dT%H:%M:%S")
+        seconds = (a-datetime.now()).total_seconds()
+    else:
+        await ctx.send('Please check your format ```$delay 2000-01-30T01:59:59 #general <message>```')
+        return
+    if seconds <= 0:
+        await ctx.send('Time given is not in the future')
+        return
+    message = ctx.message.content.split(" ",3)[3]
+    channelId = channel.id
+    guildId = ctx.guild.id
+    scheduler.add_job(sendMessage, 'date', run_date=delay, args=(guildId,channelId,message))
+    await ctx.message.add_reaction('✅')
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def echo(ctx, channel: discord.TextChannel):
+    message = ctx.message.content.split(" ",2)[2]
+    await channel.send(message)
+    await ctx.message.add_reaction('✅')
 
 @bot.command()
 async def roll(ctx, dice: str):
